@@ -1,22 +1,36 @@
 module.exports = function (db) {
     var express = require('express');
+    var ObjectID = require('mongodb').ObjectID;
     var router = express.Router();
     var google = require('googleapis');
     var cfg = require('../config.js');
     var OAuth2Client = google.auth.OAuth2;
     var gmail = google.gmail('v1');
     var oauth2Client = new OAuth2Client(cfg.gmail.CLIENT_ID, cfg.gmail.CLIENT_SECRET, cfg.gmail.REDIRECT_URL);
-
+    var sess;
     /* GET home page. */
     router.get('/', function (req, res) {
-        var sess = req.session;
-        if (sess.id === null || sess.id === undefined) {
-            console.log('session obj:', sess);
-            res.redirect('/login');
-        } else {
-            console.log('session obj:', sess);
-            res.render('index', {title: 'Express'});
+        sess = req.session;
+        if (sess.recordId) {
+            getTokensFromDb(sess.recordId,function(tokens){
+                console.log('auth: ', oauth2Client);
+                oauth2Client.setCredentials(tokens);
+                //gmail.users.messages.list({
+                //    userId: 'me',
+                //    auth: oauth2Client,
+                //    q: 'label:UNREAD'
+                //},function(err,res){
+                //    console.log(err);
+                //    console.log(res);
+                //});
+                gmail.users.getProfile({userId:'me',auth : oauth2Client},function(err,data){
+                    res.render('index', {name: data
+                        .emailAddress});
+                });
+            });
 
+        } else {
+            res.redirect('/login');
         }
 
     });
@@ -32,22 +46,34 @@ module.exports = function (db) {
 
     router.get('/getAccess', function (req, res) {
         var code = req.query.code;
-        console.log('Code: ', code);
         oauth2Client.getToken(code, function (err, tokens) {
             if (!err) {
                 var collection = db.collection("tokens");
                 collection.insert(tokens, function (err, data) {
-                    console.log(err);
-                    console.log(tokens._id);
-                    req.session['id'] = tokens.id;
+                    req.session.recordId = tokens._id;
+                    //req.session.save();
+                    res.redirect('/');
                 });
+
             }
             oauth2Client.setCredentials(tokens);
-
-            res.redirect('/');
-
         });
     });
+
+
+// gets data by record id sored in cockie session
+    var getTokensFromDb = function(id,cb){
+        var collection = db.collection("tokens");
+        collection.find({"_id" : ObjectID.createFromHexString(id)}).toArray(function(err,docs){
+            if(docs !== null && docs.length >= 1){
+                //return first element of array (from an array with one element )
+                cb(docs[0]);
+            }else{
+                cb(null);
+            }
+
+        });
+    };
 
     return router;
 }

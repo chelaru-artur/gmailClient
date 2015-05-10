@@ -1,5 +1,7 @@
 extends layout
 
 block content
-  div(ng-controller='MainCtrl') Welcome
+  div(ng-controller='MainCtrl')
+
+    h2!=name
     ng-view

@@ -6,8 +6,11 @@ var MongoClient = require('mongodb').MongoClient;
 //first connect to db and send connection instance to the app
 
 MongoClient.connect(cfg.mongo.uri, function(err, db) {
-    console.log("Connected correctly to server");
-
+    if(err!== null){
+        console.log('Error: ',err);
+    }else {
+        console.log("Connected correctly to server");
+    }
     var app = require('../app')(db);
     app.set('port', process.env.PORT || 3000);
 

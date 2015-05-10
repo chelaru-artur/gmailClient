@@ -9,6 +9,7 @@ module.exports = {
 
     },
     mongo : {
-        uri : 'mongodb://user:user@ds031842.mongolab.com:31842/gmailclient'
+        //uri : 'mongodb://user:user@ds031842.mongolab.com:31842/gmailclient'
+        uri : 'mongodb://127.0.0.1:27017/gmailclient'
     }
 }

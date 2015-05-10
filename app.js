@@ -18,6 +18,7 @@ module.exports = function(db){
     app.set('views', path.join(__dirname, 'views'));
     app.set('view engine', 'jade');
 
+
 // uncomment after placing your favicon in /public
 //app.use(favicon(__dirname + '/public/favicon.ico'));
     app.use(logger('dev'));
@@ -26,10 +27,11 @@ module.exports = function(db){
         secret: 'random secret string',
         store: new MongoStore({db : db}),
         resave: true,
-        saveUninitialized: true
+        saveUninitialized : true
     }));
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: false }));
+
     app.use(express.static(path.join(__dirname, 'public')));
 
     app.use('/', routes);
